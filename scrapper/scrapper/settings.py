@@ -18,7 +18,7 @@ NEWSPIDER_MODULE = 'scrapper.spiders'
 # USER_AGENT = 'scrapper (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 # CONCURRENT_REQUESTS = 32
@@ -45,8 +45,6 @@ DEFAULT_REQUEST_HEADERS = {
     'Accept-Language': "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
     'Cache-Control': "max-age=0",
     'Connection': 'keep-alive',
-    'Host': 'fsbo.com',
-    'Referer': 'https://fsbo.com/listings/search/',
     'Sec-Fetch-Mode': 'navigate',
     'Sec-Fetch-Site': 'same-origin',
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
