@@ -34,14 +34,22 @@ class ForSaleByOwnerSpider(scrapy.Spider):
                 'south_carolina', 'south_dakota', 'tennessee', 'texas', 'utah', 'vermont', 'virginia', 'washington',
                 'district-of-columbia', 'west_virginia', 'wisconsin', 'wyoming']
 
-        url = base_url + urls[0]
-        yield scrapy.Request(
-            url=url,
-            callback=self.success_parse)
+        for url in urls:
+            url = base_url + url
+            yield scrapy.Request(
+                url=url,
+                callback=self.success_parse)
 
     def success_parse(self, response):
         soup = BeautifulSoup(response.body, 'html.parser')
-        houses = soup.select('.js-listings-list ol')[1].select('li div.estate-bd > a')
+        group = soup.select('.js-listings-list ol')
+        if len(group) == 0:
+            return
+        elif len(group) == 1:
+            houses = soup.select('.js-listings-list ol')[0].select('li div.estate-bd > a')
+        else:
+            houses = soup.select('.js-listings-list ol')[1].select('li div.estate-bd > a')
+
         for house in houses:
             yield response.follow(house['href'], headers=self.headers,
                                   callback=self.house_parse_with_link(house['href']))
@@ -51,11 +59,13 @@ class ForSaleByOwnerSpider(scrapy.Spider):
             soup = BeautifulSoup(response.body, 'html.parser')
             owner_name = ''
             owner_contact = Util.normalize_phone(soup.select('#contact span strong')[0].text)
+            if owner_contact == '':
+                return
             address = Util.normalize_address(soup.select('ul[itemprop=address]>li')[0].text)
             image_url = ''
             images = soup.select('#gallery img')
             if len(images) > 0:
-                image_url = images[0]['src']
+                image_url = images[0]['data-image']
             description = soup.select('div.details')[0].text
             item = ScrapperItem()
             item['link'] = link
@@ -65,7 +75,6 @@ class ForSaleByOwnerSpider(scrapy.Spider):
             item['owner_name'] = owner_name
             item['owner_contact'] = owner_contact
             item['active_search'] = ''
-            print(item)
 
             yield item
 
