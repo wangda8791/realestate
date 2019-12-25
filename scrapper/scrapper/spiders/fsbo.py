@@ -25,61 +25,23 @@ class FSBOSpider(scrapy.Spider, ABC):
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                       'Chrome/79.0.3945.88 Safari/537.36',
     }
-    state = ''
-    page = 0
-    houses = []
 
     def parse(self, response):
-        states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY',
-                  'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND',
-                  'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY', 'DC',
-                  'MH', 'AE', 'AA', 'AE', 'AE', 'AE', 'AP']
-        # for state in states:
-        self.state = 'TX'
-        self.page = 1
-        self.houses = []
         yield scrapy.FormRequest.from_response(
             response=response,
             formid='submitstate',
             formdata={
-                'searchQuery': self.state,
                 'paging': '1',
-                'page': str(self.page),
-                'size': '100',
+                'page': '2',
+                'size': '100000000',
                 'sort': 'distance asc'
             },
             callback=self.success_parse)
 
     def success_parse(self, response):
-        house_links = response.css('.listings .listing-right a::attr(href)').extract()
-        self.houses = self.houses + house_links
-        print(self.page, len(house_links))
-        if self.page == 2:
-            print(response.body)
-
-        if len(response.css('.nextPage')) == 0:
-            # for house in self.houses:
-            #     yield response.follow(house, headers=self.headers, callback=self.house_parse)
-            pass
-        else:
-            self.page += 1
-            # yield response.follow(
-            #     url=self.search_url,
-            #     headers=self.headers,
-            #     method='POST',
-            #     body='paging=1&page=' + str(self.page) + '&size=100&sort=distance+asc',
-            #     callback=self.success_parse)
-            yield scrapy.FormRequest.from_response(
-                response=response,
-                formid='pagingForm',
-                formdata={
-                    'searchQuery': self.state,
-                    'paging': '1',
-                    'page': str(self.page),
-                    'size': '100',
-                    'sort': 'distance asc'
-                },
-                callback=self.success_parse)
+        houses = response.css('.listings .listing-right a::attr(href)').extract()
+        for house in houses:
+            yield response.follow(house, headers=self.headers, callback=self.house_parse)
 
     def house_parse(self, response):
         soup = BeautifulSoup(response.body, 'html.parser')
